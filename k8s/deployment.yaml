@@ -9,6 +9,10 @@ spec:
       app: devops-app
   template:
     metadata:
+    annotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "3000"
+  prometheus.io/path: "/metrics"
       labels:
         app: devops-app
     spec:
@@ -22,10 +26,6 @@ spec:
         - name: MONGO_URI
           value: "mongodb://mongo-service:27017/devopsdb"
 ---
-annotations:
-  prometheus.io/scrape: "true"
-  prometheus.io/port: "3000"
-  prometheus.io/path: "/metrics"
 apiVersion: apps/v1
 kind: Deployment
 metadata:
