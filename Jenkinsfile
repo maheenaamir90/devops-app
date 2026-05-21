@@ -34,20 +34,20 @@ stage('Kubernetes Deployment') {
     steps {
         echo '=== STAGE 3: Refreshing Kube Certs & Deploying ==='
         sh '''
-            sudo chmod -R a+r /home/ubuntu/.minikube
-            sudo find /home/ubuntu/.minikube -type d -exec chmod a+x {} \\;
-            sudo cp /home/ubuntu/.kube/config /var/lib/jenkins/.kube/config
-            sudo chown jenkins:jenkins /var/lib/jenkins/.kube/config
+             chmod -R a+r /home/ubuntu/.minikube
+             find /home/ubuntu/.minikube -type d -exec chmod a+x {} \\;
+             cp /home/ubuntu/.kube/config /var/lib/jenkins/.kube/config
+             chown jenkins:jenkins /var/lib/jenkins/.kube/config
 
-            sudo cp /home/ubuntu/.minikube/ca.crt \
+             cp /home/ubuntu/.minikube/ca.crt \
                     /var/lib/jenkins/.minikube/ca.crt
-            sudo cp /home/ubuntu/.minikube/profiles/minikube/client.crt \
+             cp /home/ubuntu/.minikube/profiles/minikube/client.crt \
                     /var/lib/jenkins/.minikube/profiles/minikube/client.crt
-            sudo cp /home/ubuntu/.minikube/profiles/minikube/client.key \
+             cp /home/ubuntu/.minikube/profiles/minikube/client.key \
                     /var/lib/jenkins/.minikube/profiles/minikube/client.key
-            sudo chown -R jenkins:jenkins /var/lib/jenkins/.minikube
+             chown -R jenkins:jenkins /var/lib/jenkins/.minikube
 
-            sudo sed -i \
+            sed -i \
               's|/home/ubuntu/.minikube|/var/lib/jenkins/.minikube|g' \
               /var/lib/jenkins/.kube/config
 
