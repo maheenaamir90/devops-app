@@ -1,35 +1,20 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const client = require('prom-client');
 
 const app = express();
-app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://mongo:27017/devopsdb')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB error:', err));
+// collect default metrics
+client.collectDefaultMetrics();
 
-// Simple data model
-const Item = mongoose.model('Item', new mongoose.Schema({ name: String, date: Date }));
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
-// Routes
 app.get('/', (req, res) => {
-  res.send('<h1>DevOps App Running!</h1><p>Use /items to see data</p>');
+  res.send("DevOps App Running 🚀");
 });
 
-app.get('/items', async (req, res) => {
-  const items = await Item.find();
-  res.json(items);
+app.listen(3000, () => {
+  console.log("Server running on port 3000");
 });
-
-app.post('/add', async (req, res) => {
-  const item = new Item({ name: req.body.name, date: new Date() });
-  await item.save();
-  res.json({ message: 'Item saved', item });
-});
-
-app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', uptime: process.uptime() });
-});
-
-app.listen(3000, () => console.log('App running on port 3000'));
