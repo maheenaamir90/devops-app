@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: devops-app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: devops-app
@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: devops-app
-        image: YOUR_DOCKERHUB_USERNAME/devops-app:latest
+        image: maheenaamir90/devops-app:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:

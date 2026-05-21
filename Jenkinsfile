@@ -30,22 +30,52 @@ pipeline {
             }
         }
 
-        stage('Kubernetes Deployment') {
-            steps {
-                echo '=== STAGE 3: Deploying to Kubernetes ==='
-                sh '''
-                    export KUBECONFIG=/var/lib/jenkins/.kube/config
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                    kubectl rollout restart deployment/devops-app
-                    kubectl rollout status deployment/devops-app --timeout=120s
-                    echo "=== Running Pods ==="
-                    kubectl get pods
-                    echo "=== Services ==="
-                    kubectl get services
-                '''
-            }
-        }
+stage('Kubernetes Deployment') {
+    steps {
+        echo '=== STAGE 3: Refreshing Kube Certs & Deploying ==='
+        sh '''
+            sudo chmod -R a+r /home/ubuntu/.minikube
+            sudo find /home/ubuntu/.minikube -type d -exec chmod a+x {} \\;
+            sudo cp /home/ubuntu/.kube/config /var/lib/jenkins/.kube/config
+            sudo chown jenkins:jenkins /var/lib/jenkins/.kube/config
+
+            sudo cp /home/ubuntu/.minikube/ca.crt \
+                    /var/lib/jenkins/.minikube/ca.crt
+            sudo cp /home/ubuntu/.minikube/profiles/minikube/client.crt \
+                    /var/lib/jenkins/.minikube/profiles/minikube/client.crt
+            sudo cp /home/ubuntu/.minikube/profiles/minikube/client.key \
+                    /var/lib/jenkins/.minikube/profiles/minikube/client.key
+            sudo chown -R jenkins:jenkins /var/lib/jenkins/.minikube
+
+            sudo sed -i \
+              's|/home/ubuntu/.minikube|/var/lib/jenkins/.minikube|g' \
+              /var/lib/jenkins/.kube/config
+
+            kubectl get nodes
+
+            # Scale down first to free resources
+            kubectl scale deployment devops-app --replicas=1 || true
+            kubectl scale deployment mongo --replicas=1 || true
+
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/service.yaml
+
+            # Load image into minikube directly
+            minikube image load maheenaamir90/devops-app:latest
+
+            kubectl rollout restart deployment/devops-app
+
+            # Increased timeout to 3 minutes
+            kubectl rollout status deployment/devops-app --timeout=180s
+
+            echo "=== Running Pods ==="
+            kubectl get pods
+
+            echo "=== Services ==="
+            kubectl get services
+        '''
+    }
+}
 
         stage('Prometheus and Grafana') {
             steps {
